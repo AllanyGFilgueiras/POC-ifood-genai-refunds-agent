@@ -1,0 +1,18 @@
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+.eggs/
+.env
+venv/
+.env.*
+
+# Vector store
+/data/vector_store/
+
+# Node
+frontend/node_modules/
+*.log
+
+# macOS
+.DS_Store
