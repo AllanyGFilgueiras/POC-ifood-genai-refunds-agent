@@ -113,7 +113,9 @@ def test_business_scenarios_cancelamento_falta_ingrediente(tmp_path: Path):
     config.get_settings.cache_clear()
     retriever = make_retriever(vector_dir)
     agent = AgentService(retriever=retriever, llm_client=EchoLLM(), use_fake_override=True)
-    response = agent.answer("Restaurante cancelou por falta de ingrediente. Reembolso é automático?")
+    response = agent.answer(
+        "Restaurante cancelou por falta de ingrediente. Reembolso é automático?"
+    )
     assert response.is_fallback is False
     assert any("cancelamento" in s.categoria for s in response.sources)
 

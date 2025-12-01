@@ -35,10 +35,14 @@ class AgentService:
         except Exception:  # pragma: no cover - fallback sem dependência
             FakeEmbeddings = None  # type: ignore
         has_fake_embeddings = (
-            FakeEmbeddings is not None and hasattr(self.retriever, "embeddings") and isinstance(self.retriever.embeddings, FakeEmbeddings)
+            FakeEmbeddings is not None
+            and hasattr(self.retriever, "embeddings")
+            and isinstance(self.retriever.embeddings, FakeEmbeddings)
         )
-        self.use_fake = use_fake_override if use_fake_override is not None else (
-            self.settings.use_fake_embeddings or has_fake_embeddings
+        self.use_fake = (
+            use_fake_override
+            if use_fake_override is not None
+            else (self.settings.use_fake_embeddings or has_fake_embeddings)
         )
         self.llm_client = llm_client or LLMClient()
 
@@ -61,19 +65,27 @@ class AgentService:
     def answer(self, question: str) -> ChatResponse:
         intent = classify_scope(question)
         if intent == "FORA_DO_ESCOPO":
-            return ChatResponse(answer=FALLBACK_MESSAGE, is_fallback=True, sources=[], similarity_scores=[])
+            return ChatResponse(
+                answer=FALLBACK_MESSAGE, is_fallback=True, sources=[], similarity_scores=[]
+            )
 
         try:
             docs_with_scores = self.retriever.search(question, k=self.settings.retrieval_k)
         except RetrievalError:
-            return ChatResponse(answer=FALLBACK_MESSAGE, is_fallback=True, sources=[], similarity_scores=[])
+            return ChatResponse(
+                answer=FALLBACK_MESSAGE, is_fallback=True, sources=[], similarity_scores=[]
+            )
         sources = self._to_sources(docs_with_scores)
         if not sources:
-            return ChatResponse(answer=FALLBACK_MESSAGE, is_fallback=True, sources=[], similarity_scores=[])
+            return ChatResponse(
+                answer=FALLBACK_MESSAGE, is_fallback=True, sources=[], similarity_scores=[]
+            )
 
         top_score = sources[0].score or 0.0
         similarity_scores = [
-            SimilarityScore(source_id=src.id, score=src.score or 0.0) for src in sources if src.score is not None
+            SimilarityScore(source_id=src.id, score=src.score or 0.0)
+            for src in sources
+            if src.score is not None
         ]
 
         overlaps = [_has_question_overlap(question, src) for src in sources]
@@ -84,23 +96,34 @@ class AgentService:
         if self.use_fake and self.settings.similarity_threshold <= 0.1:
             answer = self.llm_client.generate(question=question, sources=sources)
             return ChatResponse(
-                answer=answer, is_fallback=False, sources=sources, similarity_scores=similarity_scores
+                answer=answer,
+                is_fallback=False,
+                sources=sources,
+                similarity_scores=similarity_scores,
             )
 
         if self.use_fake:
             if not overlap_ok:
                 return ChatResponse(
-                    answer=FALLBACK_MESSAGE, is_fallback=True, sources=sources, similarity_scores=similarity_scores
+                    answer=FALLBACK_MESSAGE,
+                    is_fallback=True,
+                    sources=sources,
+                    similarity_scores=similarity_scores,
                 )
             top_score = max(top_score, 1.0)
 
         if top_score < self.settings.similarity_threshold:
             return ChatResponse(
-                answer=FALLBACK_MESSAGE, is_fallback=True, sources=sources, similarity_scores=similarity_scores
+                answer=FALLBACK_MESSAGE,
+                is_fallback=True,
+                sources=sources,
+                similarity_scores=similarity_scores,
             )
 
         answer = self.llm_client.generate(question=question, sources=sources)
-        return ChatResponse(answer=answer, is_fallback=False, sources=sources, similarity_scores=similarity_scores)
+        return ChatResponse(
+            answer=answer, is_fallback=False, sources=sources, similarity_scores=similarity_scores
+        )
 
 
 def _has_question_overlap(question: str, source: RetrievedSource) -> bool:

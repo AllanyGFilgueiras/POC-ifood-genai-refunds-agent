@@ -64,7 +64,9 @@ def knowledge_documents_to_langchain_docs(docs: Iterable[KnowledgeDocument]) -> 
     return langchain_docs
 
 
-def ingest_csv_to_vector_store(csv_path: Path | None = None, persist_dir: Path | None = None) -> FAISS:
+def ingest_csv_to_vector_store(
+    csv_path: Path | None = None, persist_dir: Path | None = None
+) -> FAISS:
     settings = get_settings()
     csv_file = csv_path or settings.csv_path
     vector_dir = persist_dir or settings.vector_store_path

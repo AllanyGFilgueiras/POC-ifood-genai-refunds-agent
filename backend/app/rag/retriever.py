@@ -32,7 +32,9 @@ class VectorStoreRetriever:
         top_k = k or self.settings.retrieval_k
         docs_and_scores = self.vector_store.similarity_search_with_score(query, k=top_k)
         # Quando em modo fake ou embeddings de teste, os scores não representam similaridade real; normaliza para 0.0
-        from langchain_community.embeddings import FakeEmbeddings  # local import para evitar dependência dura
+        from langchain_community.embeddings import (
+            FakeEmbeddings,
+        )  # local import para evitar dependência dura
 
         if self.settings.use_fake_embeddings or isinstance(self.embeddings, FakeEmbeddings):
             docs_and_scores = [(doc, 0.0) for doc, _ in docs_and_scores]
